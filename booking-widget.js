@@ -19,9 +19,9 @@
 
   var se = g('bw-steps'), nx = g('bw-nx'), bk = g('bw-bk'), pnav = g('bw-pnav'), okEl = g('bw-ok');
   var footer = g('bw-panel-footer');
-  var calView = g('bw-cal-view'), timeView = g('bw-time-view');
+  var timeInline = g('bw-time-inline');
   var track = g('bw-cal-track');
-  var timeDayEl = g('bw-time-day'), timeDateEl = g('bw-time-date'), tsEl = g('bw-ts');
+  var timeDateEl = g('bw-time-date'), tsEl = g('bw-ts');
 
   var cm = new Date(); cm.setDate(1);
   var td = new Date(); td.setHours(0,0,0,0);
@@ -107,18 +107,16 @@
     if (n === 1) setTimeout(function() { mai.focus(); }, 100);
     if (n === 4) {
       if (d.date && selDate) {
-        calView.classList.add('hidden');
-        timeView.classList.add('open');
-        timeDayEl.textContent = DN[selDate.getDay()];
+        // Show inline time list below calendar
+        timeInline.hidden = false;
         timeDateEl.textContent = d.date;
         showTime();
       } else {
-        calView.classList.remove('hidden');
-        timeView.classList.remove('open');
-        // On mobile, scroll to selected date (or top) after DOM settles
-        if (isMobile()) {
-          requestAnimationFrame(function() { scrollToSelected(); });
-        }
+        timeInline.hidden = true;
+      }
+      // On mobile, scroll to selected date (or top) after DOM settles
+      if (isMobile()) {
+        requestAnimationFrame(function() { scrollToSelected(); });
       }
     }
     valStep();
@@ -131,13 +129,8 @@
       case 2: ok = d.type !== ''; break;
       case 3: ok = d.rooms !== ''; break;
       case 4:
-        // If time picker is showing, require both date and time
-        if (timeView.classList.contains('open')) {
-          ok = d.date !== '' && d.time !== '';
-        } else {
-          // Calendar view — just need a date selected
-          ok = d.date !== '';
-        }
+        // Both date and time required (both are visible simultaneously)
+        ok = d.date !== '' && d.time !== '';
         break;
       case 5: ok = true; break;
     }
@@ -146,9 +139,7 @@
 
   nx.addEventListener('click', function() {
     if (nx.disabled) return;
-    // Step 4: if date selected but no time, show time picker
-    if (s === 4 && d.date && !d.time) { showTime(); valStep(); return; }
-    // Step 4: if date and time selected, proceed to next step
+    // Step 5: submit form
     if (s === 5) { if (!g('bw-contact-form').reportValidity()) return; sub(); return; }
     var idx = STEPS.indexOf(s);
     if (idx < STEPS.length - 1) goStep(STEPS[idx + 1]);
@@ -480,8 +471,9 @@
   g('bw-cnn').addEventListener('click', slideNext);
 
   function showTime() {
-    calView.classList.add('hidden'); timeView.classList.add('open');
-    if (selDate) { timeDayEl.textContent = DN[selDate.getDay()]; timeDateEl.textContent = d.date; }
+    // Inline: show time picker below calendar
+    timeInline.hidden = false;
+    if (d.date) timeDateEl.textContent = d.date;
     var avail = SLOTS.filter(function(t) { return !booked[d.date + '|' + t]; });
     if (!avail.length) { tsEl.innerHTML = '<p class="ekstra-liten-tekst" style="opacity:0.4;text-align:center;padding:12px;">Ingen ledige tider</p>'; return; }
     var currentTime = d.time;
@@ -498,8 +490,6 @@
       });
     });
   }
-
-  g('bw-time-back').addEventListener('click', function() { timeView.classList.remove('open'); calView.classList.remove('hidden'); });
 
   // Render calendars immediately (with empty bookings). Fetch bookings lazily on first panel open.
   rc();
@@ -531,8 +521,7 @@
     okEl.classList.remove('active');
     footer.style.display = '';
     se.style.display = '';
-    if (calView) { calView.classList.remove('hidden'); }
-    if (timeView) { timeView.classList.remove('open'); }
+    if (timeInline) timeInline.hidden = true;
     goStep(2);
   }
 
