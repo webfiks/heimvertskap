@@ -289,34 +289,76 @@
   .bw-cal-track { gap: 0; }
 }
 
-/* Mobile vertical scroll calendar — hidden on desktop */
+/* Mobile vertical scroll calendar + date strip — hidden on desktop */
 .bw-cal-scroll { display: none; }
+.bw-date-strip-wrap { display: none; }
 
 @media (max-width: 768px) {
   .bw-cal-desktop { display: none; }
   .bw-cal-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
-  .bw-cal-scroll {
+
+  /* Hide old vertical scroll calendar on mobile — date strip takes its place */
+  .bw-cal-scroll { display: none !important; }
+
+  /* Horizontal date strip */
+  .bw-date-strip-wrap {
     display: block;
-    flex: 1; min-height: 0;
-    overflow-y: auto; -webkit-overflow-scrolling: touch;
-    margin: 20px -24px 0;
-    padding: 0 24px 24px;
+    margin: 16px -24px 0;
+    flex-shrink: 0;
   }
-  .bw-cal-scroll .bw-cal-m {
-    flex: none; width: 100%;
-    margin-bottom: 32px;
+  .bw-strip-month {
+    font-size: 17px; font-weight: 700; color: #311c0a;
+    padding: 0 24px; margin-bottom: 14px;
   }
-  .bw-cal-scroll .bw-cal-m:last-child { margin-bottom: 0; }
-  /* Sticky month title */
-  .bw-cal-scroll .bw-cal-m-title {
-    position: sticky; top: 0;
+  .bw-date-strip {
+    display: flex; gap: 10px;
+    padding: 4px 24px;
+    overflow-x: auto; overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .bw-date-strip::-webkit-scrollbar { display: none; }
+
+  /* Individual date item: circle with number + weekday label */
+  .bw-ds-item {
+    flex: 0 0 auto;
+    display: flex; flex-direction: column;
+    align-items: center;
+    background: none; border: none;
+    padding: 0; cursor: pointer;
+    scroll-snap-align: start;
+    font-family: inherit;
+  }
+  .bw-ds-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid rgba(49,28,10,0.15);
     background: #fffefd;
-    padding: 12px 0 10px;
-    text-align: left !important;
-    margin-bottom: 8px !important;
-    z-index: 2;
-    font-size: 18px; font-weight: 700;
+    font-size: 20px; font-weight: 700;
+    color: #311c0a;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+    margin-bottom: 6px;
   }
+  .bw-ds-item:hover:not(.sel):not(.dis) .bw-ds-circle { border-color: rgba(49,28,10,0.4); }
+  .bw-ds-item.tod:not(.sel):not(.dis) .bw-ds-circle { border-color: #bc6c25; }
+  .bw-ds-item.sel .bw-ds-circle {
+    background: #311c0a; color: #fffefd; border-color: #311c0a;
+  }
+  .bw-ds-item.dis .bw-ds-circle {
+    color: rgba(49,28,10,0.25); cursor: default;
+    border-color: rgba(49,28,10,0.08);
+  }
+  .bw-ds-item.dis { cursor: default; }
+  .bw-ds-wd {
+    font-size: 13px; font-weight: 500; color: #311c0a; opacity: 0.55;
+    letter-spacing: 0.02em;
+  }
+  .bw-ds-item.sel .bw-ds-wd { opacity: 1; color: #311c0a; font-weight: 700; }
+  .bw-ds-item.dis .bw-ds-wd { opacity: 0.25; }
+
+  /* Give inline time picker room to breathe below the strip */
+  .bw-time-inline { margin-top: 24px; padding-top: 20px; }
 }
 
 .bw-cn {
