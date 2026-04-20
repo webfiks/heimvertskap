@@ -217,18 +217,6 @@
       });
   }
 
-  function searchPhoton(q, signal) {
-    return fetch('https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=6&lang=default&bbox=4.0,57.0,31.5,71.5', { signal: signal })
-      .then(function(r) { if (!r.ok) throw new Error(); return r.json(); })
-      .then(function(res) {
-        if (!res.features || !res.features.length) return null;
-        return res.features.filter(function(f) { return f.properties.countrycode === 'NO'; }).slice(0, 6).map(function(f) {
-          var p = f.properties; var nm = [p.name, p.street, p.housenumber].filter(Boolean).join(' ') || p.city || 'Ukjent';
-          return { l1: nm + ', Norge', l2: dedup([p.postcode, p.city, p.county].filter(Boolean)).join(', ') || 'Norge', full: dedup([nm, p.postcode, p.city, p.county].filter(Boolean)).join(', ') };
-        });
-      });
-  }
-
   function renderAddr(results) {
     if (!results || !results.length) { dd.innerHTML = '<div class="ekstra-liten-tekst" style="padding:16px;text-align:center;opacity:0.4;">Ingen treff</div>'; return; }
     dd.innerHTML = results.map(function(r) {
@@ -265,8 +253,8 @@
     st = setTimeout(function() {
       ac = new AbortController();
       searchKartverket(q, ac.signal)
-        .then(function(res) { if (res && res.length) return renderAddr(res); return searchPhoton(q, ac.signal).then(renderAddr); })
-        .catch(function(e) { if (e.name === 'AbortError') return; searchPhoton(q, ac.signal).then(renderAddr).catch(function() {}); });
+        .then(renderAddr)
+        .catch(function(e) { if (e.name !== 'AbortError') renderAddr(null); });
     }, 300);
   });
 
@@ -283,8 +271,8 @@
       st = setTimeout(function() {
         ac = new AbortController();
         searchKartverket(q, ac.signal)
-          .then(function(res) { if (res && res.length) return renderAddr(res); return searchPhoton(q, ac.signal).then(renderAddr); })
-          .catch(function(e) { if (e.name === 'AbortError') return; searchPhoton(q, ac.signal).then(renderAddr).catch(function() {}); });
+          .then(renderAddr)
+          .catch(function(e) { if (e.name !== 'AbortError') renderAddr(null); });
       }, 150);
     }
   });
@@ -316,8 +304,8 @@
     mst = setTimeout(function() {
       mac = new AbortController();
       searchKartverket(q, mac.signal)
-        .then(function(res) { if (res && res.length) return renderMobileAddr(res); return searchPhoton(q, mac.signal).then(renderMobileAddr); })
-        .catch(function(e) { if (e.name === 'AbortError') return; searchPhoton(q, mac.signal).then(renderMobileAddr).catch(function() {}); });
+        .then(renderMobileAddr)
+        .catch(function(e) { if (e.name !== 'AbortError') renderMobileAddr(null); });
     }, 300);
   });
 
@@ -530,11 +518,60 @@
     setTimeout(done, 800);
   }
 
+  function resetForm() {
+    // Clear all data
+    d = { addr:'', type:'', rooms:'', date:'', time:'', name:'', email:'', phone:'', msg:'' };
+    selDate = null;
+    // Clear UI state
+    ai.value = ''; if (mai) mai.value = '';
+    document.querySelectorAll('.bw-opt.sel').forEach(function(x) { x.classList.remove('sel'); });
+    document.querySelectorAll('.bw-d.sel').forEach(function(x) { x.classList.remove('sel'); });
+    ['bw-name','bw-email','bw-phone','bw-msg'].forEach(function(id) { var e = g(id); if (e) e.value = ''; });
+    // Reset view back to step 2 (default for desktop)
+    okEl.classList.remove('active');
+    footer.style.display = '';
+    se.style.display = '';
+    if (calView) { calView.classList.remove('hidden'); }
+    if (timeView) { timeView.classList.remove('open'); }
+    goStep(2);
+  }
+
+  // OK close button — closes panel and resets form
+  var okCloseBtn = g('bw-ok-close');
+  if (okCloseBtn) {
+    okCloseBtn.addEventListener('click', function() {
+      closePanel();
+      // Wait for close animation before resetting, so user doesn't see UI reset mid-animation
+      setTimeout(resetForm, 400);
+    });
+  }
+
+  function spawnSparkles() {
+    var el = g('bw-sparkles');
+    if (!el) return;
+    el.innerHTML = '';
+    var colors = ['#bc6c25','#fd9232','#ffdcbe','#311c0a'];
+    var n = 18;
+    for (var i = 0; i < n; i++) {
+      var angle = (i / n) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
+      var dist = 110 + Math.random() * 80;
+      var sx = Math.cos(angle) * dist;
+      var sy = Math.sin(angle) * dist;
+      var sr = Math.random() * 180 - 90;
+      var sc = colors[i % colors.length];
+      var sd = Math.random() * 0.25;
+      var sp = document.createElement('span');
+      sp.style.cssText = '--sx:' + sx.toFixed(0) + 'px;--sy:' + sy.toFixed(0) + 'px;--sr:' + sr.toFixed(0) + 'deg;--sc:' + sc + ';--sd:' + sd.toFixed(2) + 's';
+      el.appendChild(sp);
+    }
+  }
+
   function done() {
     nx.classList.remove('bw-ld');
     document.querySelectorAll('.bw-step').forEach(function(e) { e.classList.remove('active'); });
     footer.style.display = 'none'; se.style.display = 'none';
     okEl.classList.add('active');
+    spawnSparkles();
     g('bw-sum').innerHTML =
       '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Adresse</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.addr + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Type</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.type + '</span></div>' +
