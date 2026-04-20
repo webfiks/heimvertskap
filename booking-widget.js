@@ -107,16 +107,17 @@
     if (n === 1) setTimeout(function() { mai.focus(); }, 100);
     if (n === 4) {
       if (d.date && selDate) {
-        // Show inline time list below calendar
         timeInline.hidden = false;
         timeDateEl.textContent = d.date;
         showTime();
       } else {
         timeInline.hidden = true;
       }
-      // On mobile, scroll to selected date (or top) after DOM settles
+      // On mobile, build strip on first entry and scroll to selected
       if (isMobile()) {
-        requestAnimationFrame(function() { scrollToSelected(); });
+        if (!stripBuilt) buildDateStrip();
+        else syncDateSelection();
+        requestAnimationFrame(function() { scrollStripToSelected(); });
       }
     }
     valStep();
@@ -172,6 +173,7 @@
       // Re-render calendars with updated booked state so users see conflicts
       rc();
       if (scrollMonthsLoaded > 0) renderScrollCalendar();
+      if (stripBuilt) { buildDateStrip(); syncDateSelection(); }
     } catch (e) {}
   }
 
@@ -359,16 +361,116 @@
   // Delegated click handler — one listener covers all months
   function handleDateClick(btn) {
     if (btn.classList.contains('dis') || btn.classList.contains('emp')) return;
-    document.querySelectorAll('.bw-d.sel').forEach(function(x) { x.classList.remove('sel'); });
+    // Clear selection on both calendar cells and strip items
+    document.querySelectorAll('.bw-d.sel, .bw-ds-item.sel').forEach(function(x) { x.classList.remove('sel'); });
     btn.classList.add('sel');
     var newDateStr = btn.dataset.date;
     var sameDate = (newDateStr === d.date);
     d.date = newDateStr;
     if (!sameDate) d.time = '';
     selDate = new Date(+btn.dataset.y, +btn.dataset.m, +btn.dataset.d);
+    // Mirror selection to the OTHER picker so both stay in sync (calendar ↔ strip)
+    syncDateSelection();
     showTime();
     valStep();
   }
+
+  // Sync the currently selected date across both mobile strip and desktop/mobile calendars
+  function syncDateSelection() {
+    if (!d.date) return;
+    document.querySelectorAll('.bw-d, .bw-ds-item').forEach(function(el) {
+      if (el.dataset.date === d.date) el.classList.add('sel');
+      else el.classList.remove('sel');
+    });
+  }
+
+  // ── Mobile horizontal date strip ──
+  var STRIP_DAYS = 60;           // number of dates to render in the strip
+  var stripBuilt = false;
+
+  function buildDateStrip() {
+    var stripEl = g('bw-date-strip');
+    if (!stripEl) return;
+    stripEl.innerHTML = '';
+    var base = new Date(); base.setHours(0,0,0,0);
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < STRIP_DAYS; i++) {
+      var dt = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+      var dw = dt.getDay();
+      var dateStr = dt.getDate() + '. ' + MO[dt.getMonth()] + ' ' + dt.getFullYear();
+      // Disabled if weekend, or if every time slot is already booked
+      var allBooked = SLOTS.every(function(t) { return booked[dateStr + '|' + t]; });
+      var disabled = (dw === 0 || dw === 6) || allBooked;
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'bw-ds-item';
+      if (disabled) btn.classList.add('dis');
+      if (dt.toDateString() === td.toDateString()) btn.classList.add('tod');
+      if (selDate && dt.toDateString() === selDate.toDateString()) btn.classList.add('sel');
+      btn.dataset.date = dateStr;
+      btn.dataset.y = dt.getFullYear();
+      btn.dataset.m = dt.getMonth();
+      btn.dataset.d = dt.getDate();
+      var circle = document.createElement('span');
+      circle.className = 'bw-ds-circle';
+      circle.textContent = dt.getDate();
+      var wd = document.createElement('span');
+      wd.className = 'bw-ds-wd';
+      var wdShort = ['Søn','Man','Tir','Ons','Tor','Fre','Lør'];
+      wd.textContent = wdShort[dw];
+      btn.appendChild(circle);
+      btn.appendChild(wd);
+      frag.appendChild(btn);
+    }
+    stripEl.appendChild(frag);
+    stripBuilt = true;
+    updateStripMonthLabel();
+  }
+
+  // Update month label based on left-most visible date in strip
+  function updateStripMonthLabel() {
+    var stripEl = g('bw-date-strip');
+    var labelEl = g('bw-strip-month');
+    if (!stripEl || !labelEl) return;
+    var scrollLeft = stripEl.scrollLeft;
+    var items = stripEl.querySelectorAll('.bw-ds-item');
+    for (var i = 0; i < items.length; i++) {
+      if (items[i].offsetLeft + items[i].offsetWidth > scrollLeft + 8) {
+        var y = +items[i].dataset.y, m = +items[i].dataset.m;
+        labelEl.textContent = MO[m] + ' ' + y;
+        return;
+      }
+    }
+  }
+
+  // Scroll strip so selected date is visible near left edge
+  function scrollStripToSelected() {
+    var stripEl = g('bw-date-strip');
+    if (!stripEl) return;
+    var sel = stripEl.querySelector('.bw-ds-item.sel');
+    if (!sel) {
+      // No selection: scroll to first non-disabled item
+      var first = stripEl.querySelector('.bw-ds-item:not(.dis)');
+      if (first) stripEl.scrollLeft = Math.max(0, first.offsetLeft - 24);
+      updateStripMonthLabel();
+      return;
+    }
+    stripEl.scrollLeft = Math.max(0, sel.offsetLeft - 24);
+    updateStripMonthLabel();
+  }
+
+  // Wire up strip: click + scroll
+  (function attachStripHandlers() {
+    var stripEl = g('bw-date-strip');
+    if (!stripEl) return;
+    stripEl.addEventListener('click', function(e) {
+      var btn = e.target.closest('.bw-ds-item');
+      if (btn) handleDateClick(btn);
+    });
+    stripEl.addEventListener('scroll', function() {
+      updateStripMonthLabel();
+    }, { passive: true });
+  })();
 
   function rc() {
     track.innerHTML = ''; track.classList.add('no-transition'); track.style.transform = 'translateX(0)';
