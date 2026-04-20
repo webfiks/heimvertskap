@@ -360,19 +360,40 @@
 .bw-tl-item:hover:not(.sel) { background: #ffdcbe; border-color: rgba(188,108,37,0.15); }
 .bw-tl-item.sel { background: #bc6c25; color: #fffefd; border-color: #bc6c25; cursor: default; }
 
-/* Contact */
-.bw-contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 480px) { .bw-contact-grid { grid-template-columns: 1fr; } }
+/* Contact form — labeled fields, white inputs, bordered */
+.bw-contact-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 12px;
+}
+.bw-field { display: flex; flex-direction: column; gap: 6px; }
+.bw-field-full { grid-column: 1 / -1; }
+
+.bw-lbl {
+  font-size: 13px; font-weight: 600; color: #311c0a;
+  letter-spacing: 0.01em;
+}
+.bw-req { color: #bc6c25; font-weight: 700; }
+.bw-opt-lbl { color: #311c0a; opacity: 0.4; font-weight: 400; }
 
 .bw-ci {
-  width: 100%; padding: 16px 20px; height: 54px;
-  border: none; border-radius: 16px;
-  font-size: inherit; color: #311c0a; background: #fff5ed;
-  outline: none; transition: background 0.2s ease;
+  width: 100%; padding: 14px 16px; height: 50px;
+  border: 1.5px solid rgba(49,28,10,0.15);
+  border-radius: 14px;
+  font-size: inherit; color: #311c0a; background: #fffefd;
+  outline: none;
+  transition: border-color 0.2s ease, background 0.2s ease;
+  font-family: inherit;
 }
-.bw-ci:focus { background: #ffdcbe; }
-.bw-ci::placeholder { color: #311c0a; opacity: 0.4; }
-textarea.bw-ci { resize: none; height: 54px; overflow: hidden; }
+.bw-ci:hover:not(:focus) { border-color: rgba(49,28,10,0.3); }
+.bw-ci:focus { border-color: #bc6c25; background: #fffefd; }
+.bw-ci::placeholder { color: #311c0a; opacity: 0.3; }
+textarea.bw-ci { height: 92px; padding: 14px 16px; resize: none; line-height: 1.4; }
+
+/* Stack all fields on mobile */
+@media (max-width: 600px) {
+  .bw-contact-form { grid-template-columns: 1fr; }
+}
 
 /* Panel nav */
 .bw-pnav { display: flex; align-items: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(49,28,10,0.06); gap: 0; }
@@ -404,7 +425,22 @@ textarea.bw-ci { resize: none; height: 54px; overflow: hidden; }
 
 /* Success */
 .bw-ok { display: none; text-align: center; padding: 8px 0 24px; }
-.bw-ok.active { display: block; }
+.bw-ok.active {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  min-height: 100%;
+}
+
+/* Close button on success state */
+.bw-ok-close {
+  margin-top: 20px;
+  background: #311c0a; color: #fffefd; border: none;
+  padding: 0 40px; height: 48px; border-radius: 100px;
+  cursor: pointer; transition: background 0.2s ease;
+  font-weight: 600;
+  min-width: 160px;
+}
+.bw-ok-close:hover { background: #4a3222; }
 
 /* Stage holds sparkles + circle, positioned relative so sparkles anchor to center */
 .bw-ok-stage {
