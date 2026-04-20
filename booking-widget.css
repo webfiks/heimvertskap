@@ -265,10 +265,11 @@
 .bw-oi { font-size: 24px; margin-bottom: 6px; display: block; }
 
 /* Step header — desktop: simple inline */
-.bw-step-header { margin-bottom: 14px; }
-.bw-step-icon { display: none; }
-.bw-step-title { font-weight: 600; }
-.bw-step-sub { display: none; }
+/* Step header — desktop: icon + title + subtitle, scaled down */
+.bw-step-header { margin-bottom: 16px; }
+.bw-step-icon { display: block; font-size: 22px; margin-bottom: 6px; line-height: 1; }
+.bw-step-title { font-size: 19px; font-weight: 700; color: #311c0a; line-height: 1.2; }
+.bw-step-sub { display: block; font-size: 13px; color: #311c0a; opacity: 0.45; margin-top: 4px; font-weight: 400; }
 .bw-oi-num { font-size: 20px; font-weight: 700; display: block; color: #311c0a; }
 
 /* Calendar — carousel */
@@ -346,8 +347,24 @@
 /* View toggle */
 .bw-cal-view { display: block; }
 .bw-cal-view.hidden { display: none; }
-.bw-time-view { display: none; }
-.bw-time-view.open { display: block; }
+
+/* Inline time picker — appears below calendar after date selected */
+.bw-time-inline {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(49,28,10,0.08);
+  animation: bwFadeIn 0.25s ease;
+}
+.bw-time-inline[hidden] { display: none; }
+.bw-time-label {
+  font-size: 14px; font-weight: 600; color: #311c0a;
+  margin-bottom: 12px;
+}
+.bw-time-date { font-weight: 400; opacity: 0.55; margin-left: 4px; }
+@keyframes bwFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* Time list */
 .bw-time-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
@@ -360,35 +377,36 @@
 .bw-tl-item:hover:not(.sel) { background: #ffdcbe; border-color: rgba(188,108,37,0.15); }
 .bw-tl-item.sel { background: #bc6c25; color: #fffefd; border-color: #bc6c25; cursor: default; }
 
-/* Contact form — labeled fields, white inputs, bordered */
+/* Contact form — Acorns-style labels and white inputs */
 .bw-contact-form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px 12px;
+  gap: 20px 12px;
 }
-.bw-field { display: flex; flex-direction: column; gap: 6px; }
+.bw-field { display: flex; flex-direction: column; gap: 8px; }
 .bw-field-full { grid-column: 1 / -1; }
 
 .bw-lbl {
-  font-size: 13px; font-weight: 600; color: #311c0a;
-  letter-spacing: 0.01em;
+  font-size: 15px; font-weight: 700; color: #311c0a;
+  line-height: 1.3;
 }
 .bw-req { color: #bc6c25; font-weight: 700; }
-.bw-opt-lbl { color: #311c0a; opacity: 0.4; font-weight: 400; }
+.bw-opt-lbl { color: #311c0a; opacity: 0.45; font-weight: 500; font-size: 13px; }
+.bw-helper { font-size: 12px; color: #311c0a; opacity: 0.5; margin-top: 2px; line-height: 1.4; }
 
 .bw-ci {
-  width: 100%; padding: 14px 16px; height: 50px;
-  border: 1.5px solid rgba(49,28,10,0.15);
+  width: 100%; padding: 14px 16px; height: 52px;
+  border: 1.5px solid rgba(49,28,10,0.2);
   border-radius: 14px;
-  font-size: inherit; color: #311c0a; background: #fffefd;
+  font-size: 15px; color: #311c0a; background: #fffefd;
   outline: none;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   font-family: inherit;
 }
-.bw-ci:hover:not(:focus) { border-color: rgba(49,28,10,0.3); }
-.bw-ci:focus { border-color: #bc6c25; background: #fffefd; }
+.bw-ci:hover:not(:focus) { border-color: rgba(49,28,10,0.35); }
+.bw-ci:focus { border-color: #311c0a; box-shadow: 0 0 0 3px rgba(49,28,10,0.08); }
 .bw-ci::placeholder { color: #311c0a; opacity: 0.3; }
-textarea.bw-ci { height: 92px; padding: 14px 16px; resize: none; line-height: 1.4; }
+textarea.bw-ci { height: 96px; padding: 14px 16px; resize: none; line-height: 1.4; }
 
 /* Stack all fields on mobile */
 @media (max-width: 600px) {
