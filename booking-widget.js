@@ -172,7 +172,6 @@
       });
       // Re-render calendars with updated booked state so users see conflicts
       rc();
-      if (scrollMonthsLoaded > 0) renderScrollCalendar();
       if (stripBuilt) { buildDateStrip(); syncDateSelection(); }
     } catch (e) {}
   }
@@ -319,22 +318,19 @@
   opts('bw-rooms', 'rooms');
 
   // ── Calendar ──
-  var WD_SHORT = ['M','T','O','T','F','L','S']; // single-letter for mobile
-
-  function buildMonth(year, month, mobileMode) {
+  function buildMonth(year, month) {
     var div = document.createElement('div'); div.className = 'bw-cal-m';
     var title = document.createElement('p');
     title.className = 'under-liten-tittel bw-cal-m-title';
-    title.style.cssText = mobileMode ? 'margin-bottom:8px;' : 'text-align:center;margin-bottom:12px;';
+    title.style.cssText = 'text-align:center;margin-bottom:12px;';
     title.textContent = MO[month] + ' ' + year;
     div.appendChild(title);
     var wg = document.createElement('div'); wg.className = 'bw-cw';
-    var weekdays = mobileMode ? WD_SHORT : WD;
-    for (var wi = 0; wi < weekdays.length; wi++) {
+    for (var wi = 0; wi < WD.length; wi++) {
       var e = document.createElement('div');
       e.className = 'ekstra-liten-tekst';
       e.style.cssText = 'opacity:0.3;letter-spacing:0.05em;text-align:center;padding:4px;';
-      e.textContent = weekdays[wi];
+      e.textContent = WD[wi];
       wg.appendChild(e);
     }
     div.appendChild(wg);
@@ -443,19 +439,22 @@
     }
   }
 
-  // Scroll strip so selected date is visible near left edge
+  // Scroll strip so selected date is visible, or auto-select first available if none
   function scrollStripToSelected() {
     var stripEl = g('bw-date-strip');
     if (!stripEl) return;
     var sel = stripEl.querySelector('.bw-ds-item.sel');
     if (!sel) {
-      // No selection: scroll to first non-disabled item
+      // No selection: auto-select first non-disabled item
       var first = stripEl.querySelector('.bw-ds-item:not(.dis)');
-      if (first) stripEl.scrollLeft = Math.max(0, first.offsetLeft - 24);
+      if (first) {
+        stripEl.scrollLeft = Math.max(0, first.offsetLeft - 4);
+        handleDateClick(first);
+      }
       updateStripMonthLabel();
       return;
     }
-    stripEl.scrollLeft = Math.max(0, sel.offsetLeft - 24);
+    stripEl.scrollLeft = Math.max(0, sel.offsetLeft - 4);
     updateStripMonthLabel();
   }
 
@@ -475,76 +474,15 @@
   function rc() {
     track.innerHTML = ''; track.classList.add('no-transition'); track.style.transform = 'translateX(0)';
     var y = cm.getFullYear(), m = cm.getMonth(); var nm = new Date(y, m + 1, 1);
-    track.appendChild(buildMonth(y, m, false)); track.appendChild(buildMonth(nm.getFullYear(), nm.getMonth(), false));
+    track.appendChild(buildMonth(y, m)); track.appendChild(buildMonth(nm.getFullYear(), nm.getMonth()));
     void track.offsetWidth; track.classList.remove('no-transition');
   }
-
-  // Mobile scroll calendar — lazy load 3 at a time
-  var scrollMonthsLoaded = 0;
-  var scrollLoading = false;
-
-  function loadMoreMonths(count) {
-    var scrollEl = g('bw-cal-scroll');
-    var today = new Date(); today.setDate(1);
-    var frag = document.createDocumentFragment();
-    for (var i = 0; i < count; i++) {
-      var idx = scrollMonthsLoaded + i;
-      var mDate = new Date(today.getFullYear(), today.getMonth() + idx, 1);
-      frag.appendChild(buildMonth(mDate.getFullYear(), mDate.getMonth(), true));
-    }
-    scrollEl.appendChild(frag);
-    scrollMonthsLoaded += count;
-  }
-
-  function renderScrollCalendar() {
-    var scrollEl = g('bw-cal-scroll');
-    scrollEl.innerHTML = '';
-    scrollMonthsLoaded = 0;
-    loadMoreMonths(3);
-  }
-
-  // Attach scroll listener once on init
-  (function attachScrollLoader() {
-    var scrollEl = g('bw-cal-scroll');
-    if (!scrollEl) return;
-    scrollEl.addEventListener('scroll', function() {
-      if (scrollLoading) return;
-      // Load more when 400px from bottom
-      if (scrollEl.scrollTop + scrollEl.clientHeight >= scrollEl.scrollHeight - 400) {
-        if (scrollMonthsLoaded >= 12) return; // hard cap at 1 year
-        scrollLoading = true;
-        loadMoreMonths(3);
-        // release lock after TWO frames so layout height reflects new months
-        requestAnimationFrame(function() {
-          requestAnimationFrame(function() { scrollLoading = false; });
-        });
-      }
-    }, { passive: true });
-    // Delegated click for all date buttons in scroll calendar
-    scrollEl.addEventListener('click', function(e) {
-      var btn = e.target.closest('.bw-d');
-      if (btn) handleDateClick(btn);
-    });
-  })();
 
   // Delegated click for desktop carousel track
   track.addEventListener('click', function(e) {
     var btn = e.target.closest('.bw-d');
     if (btn) handleDateClick(btn);
   });
-
-  // Scroll to selected date (mobile only, called when step 4 opens)
-  function scrollToSelected() {
-    var scrollEl = g('bw-cal-scroll');
-    if (!scrollEl) return;
-    var sel = scrollEl.querySelector('.bw-d.sel');
-    if (!sel) { scrollEl.scrollTop = 0; return; }
-    // Find the month container holding the selected date
-    var monthEl = sel.closest('.bw-cal-m');
-    if (!monthEl) return;
-    // Scroll so month title is at top (accounting for sticky header height ~50px)
-    scrollEl.scrollTop = monthEl.offsetTop - scrollEl.offsetTop;
-  }
 
   function isSingleMonth() { return window.innerWidth <= 700; }
 
@@ -593,9 +531,8 @@
     });
   }
 
-  // Render calendars immediately (with empty bookings). Fetch bookings lazily on first panel open.
+  // Render desktop carousel immediately (mobile uses date strip, built on step 4 entry)
   rc();
-  renderScrollCalendar();
 
   // ── Contact ──
   ['bw-name','bw-email','bw-phone','bw-msg'].forEach(function(id) {
