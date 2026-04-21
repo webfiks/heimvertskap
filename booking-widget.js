@@ -394,9 +394,9 @@
       var dt = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
       var dw = dt.getDay();
       var dateStr = dt.getDate() + '. ' + MO[dt.getMonth()] + ' ' + dt.getFullYear();
-      // Disabled if weekend, or if every time slot is already booked
+      // Disabled if today or past, weekend, or all slots already booked
       var allBooked = SLOTS.every(function(t) { return booked[dateStr + '|' + t]; });
-      var disabled = (dw === 0 || dw === 6) || allBooked;
+      var disabled = (dt <= td) || (dw === 0 || dw === 6) || allBooked;
       var btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'bw-ds-item';
