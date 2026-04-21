@@ -289,30 +289,26 @@
   .bw-cal-track { gap: 0; }
 }
 
-/* Mobile vertical scroll calendar + date strip — hidden on desktop */
-.bw-cal-scroll { display: none; }
+/* Date strip — hidden on desktop, shown on mobile */
 .bw-date-strip-wrap { display: none; }
 
 @media (max-width: 768px) {
   .bw-cal-desktop { display: none; }
   .bw-cal-view { display: flex; flex-direction: column; flex: 1; min-height: 0; }
 
-  /* Hide old vertical scroll calendar on mobile — date strip takes its place */
-  .bw-cal-scroll { display: none !important; }
-
   /* Horizontal date strip */
   .bw-date-strip-wrap {
     display: block;
-    margin: 16px -24px 0;
+    margin-top: 16px;
     flex-shrink: 0;
   }
   .bw-strip-month {
     font-size: 17px; font-weight: 700; color: #311c0a;
-    padding: 0 24px; margin-bottom: 14px;
+    margin-bottom: 14px;
   }
   .bw-date-strip {
     display: flex; gap: 10px;
-    padding: 4px 24px;
+    padding: 4px 0;
     overflow-x: auto; overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
@@ -408,16 +404,25 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Time list */
-.bw-time-list { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; }
+/* Time list — desktop: chips that hug content and wrap */
+.bw-time-list { display: flex; flex-wrap: wrap; gap: 8px; max-height: 260px; overflow-y: auto; }
 
 .bw-tl-item {
-  padding: 12px 16px; text-align: center;
+  padding: 11px 22px; text-align: center;
   background: #fff5ed; border: 1.5px solid transparent; border-radius: 100px;
   cursor: pointer; transition: background 0.2s ease, border-color 0.2s ease; color: #311c0a;
+  font-family: inherit;
+  flex: 0 0 auto;
+  white-space: nowrap;
 }
 .bw-tl-item:hover:not(.sel) { background: #ffdcbe; border-color: rgba(188,108,37,0.15); }
 .bw-tl-item.sel { background: #bc6c25; color: #fffefd; border-color: #bc6c25; cursor: default; }
+
+/* Mobile: keep full-width stacked pills */
+@media (max-width: 768px) {
+  .bw-time-list { flex-direction: column; flex-wrap: nowrap; }
+  .bw-tl-item { flex: 1 1 auto; padding: 14px 16px; }
+}
 
 /* Contact form — Acorns-style labels and white inputs */
 .bw-contact-form {
