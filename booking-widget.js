@@ -489,7 +489,7 @@
   function slideNext() {
     if (sliding) return; sliding = true;
     var y = cm.getFullYear(), m = cm.getMonth(); var m3 = new Date(y, m + 2, 1);
-    track.appendChild(buildMonth(m3.getFullYear(), m3.getMonth(), false));
+    track.appendChild(buildMonth(m3.getFullYear(), m3.getMonth()));
     void track.offsetWidth;
     track.style.transform = isSingleMonth() ? 'translateX(-100%)' : 'translateX(calc(-50% - 27px))';
     track.addEventListener('transitionend', function h() { track.removeEventListener('transitionend', h); cm.setMonth(cm.getMonth() + 1); rc(); sliding = false; });
@@ -500,7 +500,7 @@
     var test = new Date(cm.getFullYear(), cm.getMonth() - 1, 1);
     if (test < new Date(td.getFullYear(), td.getMonth(), 1)) return;
     sliding = true; var prev = new Date(cm.getFullYear(), cm.getMonth() - 1, 1);
-    track.insertBefore(buildMonth(prev.getFullYear(), prev.getMonth(), false), track.firstChild);
+    track.insertBefore(buildMonth(prev.getFullYear(), prev.getMonth()), track.firstChild);
     var offset = isSingleMonth() ? 'translateX(-100%)' : 'translateX(calc(-50% - 27px))';
     track.classList.add('no-transition'); track.style.transform = offset;
     void track.offsetWidth; track.classList.remove('no-transition'); track.style.transform = 'translateX(0)';
