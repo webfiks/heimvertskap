@@ -9,17 +9,22 @@
 .bw-aw { position: relative; }
 
 .bw-inp-wrap {
-  padding: 12px 25px 10px 25px;
+  padding: 12px 25px 10px 22px;
   border: 1.5px solid rgba(49,28,10,0.3); border-radius: 32px;
   background: #fffefd; transition: border-color 0.2s ease;
   cursor: text;
+  display: flex; align-items: center; gap: 14px;
 }
 .bw-inp-wrap:focus-within { border-color: #bc6c25; }
+.bw-inp-col { flex: 1; min-width: 0; }
+.bw-inp-icon { flex-shrink: 0; color: #311c0a; opacity: 0.45; }
+.bw-inp-wrap:focus-within .bw-inp-icon { opacity: 0.75; color: #bc6c25; }
 
 .bw-inp {
   width: 100%; padding: 0; border: none; border-radius: 0;
   color: #311c0a; background: transparent;
   outline: none;
+  font-family: inherit;
 }
 .bw-inp::placeholder { color: #311c0a; opacity: 0.3; }
 
@@ -308,10 +313,11 @@
   }
   .bw-date-strip {
     display: flex; gap: 10px;
-    padding: 4px 0;
+    padding: 4px 0 4px 4px;
     overflow-x: auto; overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
+    scroll-padding-left: 4px;
     scrollbar-width: none;
   }
   .bw-date-strip::-webkit-scrollbar { display: none; }
@@ -457,7 +463,7 @@ textarea.bw-ci { height: 96px; padding: 14px 16px; resize: none; line-height: 1.
 
 /* Stack all fields on mobile */
 @media (max-width: 600px) {
-  .bw-contact-form { grid-template-columns: 1fr; }
+  .bw-contact-form { grid-template-columns: 1fr; padding-bottom: 24px; }
 }
 
 /* Panel nav */
