@@ -578,7 +578,7 @@
     var el = g('bw-sparkles');
     if (!el) return;
     el.innerHTML = '';
-    var colors = ['#bc6c25','#fd9232','#ffdcbe','#311c0a'];
+    var colors = ['#e65154','#ff696c','#fce3e4','#2e1618'];
     var n = 18;
     for (var i = 0; i < n; i++) {
       var angle = (i / n) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
