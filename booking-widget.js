@@ -599,12 +599,19 @@
     document.querySelectorAll('.bw-step').forEach(function(e) { e.classList.remove('active'); });
     footer.style.display = 'none'; se.style.display = 'none';
     okEl.classList.add('active');
+    // Restart animations by removing .animate, forcing reflow, re-adding
+    var stage = okEl.querySelector('.bw-ok-stage');
+    if (stage) {
+      stage.classList.remove('animate');
+      void stage.offsetWidth;
+      stage.classList.add('animate');
+    }
     spawnSparkles();
     g('bw-sum').innerHTML =
-      '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Adresse</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.addr + '</span></div>' +
-      '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Type</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.type + '</span></div>' +
-      '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Soverom</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.rooms + '</span></div>' +
-      '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Møte</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.date + ' kl. ' + d.time + '</span></div>' +
-      '<div class="bw-sr"><span class="ekstra-liten-tekst" style="opacity:0.45;">Navn</span><span class="ekstra-liten-tekst" style="font-weight:600;">' + d.name + '</span></div>';
+      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Adresse</span><span class="ekstra-liten-tekst bw-sr-val">' + d.addr + '</span></div>' +
+      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Type</span><span class="ekstra-liten-tekst bw-sr-val">' + d.type + '</span></div>' +
+      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Soverom</span><span class="ekstra-liten-tekst bw-sr-val">' + d.rooms + '</span></div>' +
+      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Møte</span><span class="ekstra-liten-tekst bw-sr-val">' + d.date + ' kl. ' + d.time + '</span></div>' +
+      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Navn</span><span class="ekstra-liten-tekst bw-sr-val">' + d.name + '</span></div>';
   }
 })();
