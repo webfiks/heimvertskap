@@ -317,9 +317,6 @@
   mai.addEventListener('input', function() {
     clearTimeout(mst); if (mac) mac.abort();
     var q = this.value.trim();
-    // Toggle helper text: hide as soon as user types anything, show again when cleared
-    var helper = document.querySelector('.bw-mobile-helper');
-    if (helper) helper.classList.toggle('hid', q.length > 0);
     if (q.length < 2) { mdd.classList.remove('open'); mdd.innerHTML = ''; d.addr = ''; return; }
     mdd.innerHTML = '<div class="ekstra-liten-tekst" style="padding:16px;text-align:center;opacity:0.4;">Søker...</div>';
     mdd.classList.add('open');
@@ -596,8 +593,6 @@
     selDate = null;
     // Clear UI state
     ai.value = ''; if (mai) mai.value = '';
-    var helper = document.querySelector('.bw-mobile-helper');
-    if (helper) helper.classList.remove('hid');
     document.querySelectorAll('.bw-opt.sel').forEach(function(x) { x.classList.remove('sel'); });
     document.querySelectorAll('.bw-d.sel').forEach(function(x) { x.classList.remove('sel'); });
     ['bw-fornavn','bw-etternavn','bw-email','bw-phone','bw-msg'].forEach(function(id) { var e = g(id); if (e) e.value = ''; });
