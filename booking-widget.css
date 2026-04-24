@@ -199,9 +199,9 @@
     display: flex; flex-direction: column;
     flex: 1; min-height: 0;
   }
-  /* Steps without step-header need top padding */
+  /* Steps without step-header need top padding (e.g. address search step) */
   .bw-step.active:not(:has(.bw-step-header)) {
-    padding-top: 20px;
+    padding-top: 32px;
   }
 
   /* Rooms: 2x2 large card grid on mobile */
@@ -271,39 +271,38 @@
 }
 
 /* Mobile address dropdown */
-.bw-mobile-search { position: relative; margin-top: 24px; }
+.bw-mobile-search { position: relative; margin-top: 8px; }
+
+/* Underline-only field: no card background, just a clean bottom border that animates on focus */
 .bw-msearch-wrap {
   position: relative; display: flex; align-items: center;
-  background: #fdf3f3; border-radius: 16px;
-  border: 1.5px solid transparent;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  background: transparent; border-radius: 0;
+  border: none;
+  border-bottom: 1.5px solid rgba(46, 22, 24, 0.25);
+  transition: border-color 0.2s ease;
 }
-.bw-msearch-wrap:focus-within { border-color: #e65154; background: #fce3e4; }
+.bw-msearch-wrap:focus-within {
+  border-bottom-color: #e65154;
+  border-bottom-width: 2px;
+  /* Compensate for +0.5px so the field doesn't shift down by half a pixel on focus */
+  margin-bottom: -0.5px;
+}
 .bw-mobile-addr {
-  width: 100%; padding: 18px 20px; border: none; border-radius: 16px;
-  font-size: 16px; color: #2e1618; background: transparent; outline: none;
+  width: 100%; padding: 14px 0; border: none; border-radius: 0;
+  font-size: 18px; color: #2e1618; background: transparent; outline: none;
   font-family: inherit;
 }
-.bw-mobile-addr::placeholder { color: #2e1618; opacity: 0.45; }
-
-/* Helper text under the search field — hidden once user starts typing (handled in JS) */
-.bw-mobile-helper {
-  font-size: 13px; color: #2e1618; opacity: 0.5;
-  margin-top: 10px; padding: 0 4px;
-  line-height: 1.4;
-  transition: opacity 0.2s ease;
-}
-.bw-mobile-helper.hid { display: none; }
+.bw-mobile-addr::placeholder { color: #2e1618; opacity: 0.4; }
 
 .bw-mobile-dd {
-  display: none; margin-top: 16px;
-  border-radius: 16px; overflow: hidden; overflow-y: auto; max-height: 45vh;
-  background: #fdf3f3;
+  display: none; margin-top: 20px;
+  border-radius: 16px; overflow: hidden; overflow-y: auto; max-height: 55vh;
+  background: transparent;
 }
 .bw-mobile-dd.open { display: block; }
-.bw-mobile-dd .bw-di { padding: 14px 20px; border-bottom: 1px solid rgba(46, 22, 24,0.04); }
+.bw-mobile-dd .bw-di { padding: 14px 4px; border-bottom: 1px solid rgba(46, 22, 24,0.06); }
 .bw-mobile-dd .bw-di:last-child { border-bottom: none; }
-.bw-mobile-dd .bw-di:hover { background: #fce3e4; }
+.bw-mobile-dd .bw-di:hover { background: rgba(252, 227, 228, 0.4); }
 
 /* ── Steps ── */
 /* (base rules moved above mobile media query) */
