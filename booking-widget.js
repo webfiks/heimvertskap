@@ -28,17 +28,12 @@
   var td = new Date(); td.setHours(0,0,0,0);
   var selDate = null;
 
-  // Progress dots (5 steps) — create in body (desktop) and topbar (mobile)
-  var seTopbar = g('bw-steps-topbar');
+  // Progress dots (5 steps) — single element shared by desktop and mobile
   for (var i = 0; i < STEPS.length; i++) {
     var dot = document.createElement('div');
     dot.className = 'bw-dot' + (i === 0 ? ' active' : '');
     dot.dataset.idx = i;
     se.appendChild(dot);
-    var dot2 = document.createElement('div');
-    dot2.className = 'bw-dot' + (i === 0 ? ' active' : '');
-    dot2.dataset.idx = i;
-    seTopbar.appendChild(dot2);
   }
 
   // ── Panel open/close ──
@@ -322,6 +317,9 @@
   mai.addEventListener('input', function() {
     clearTimeout(mst); if (mac) mac.abort();
     var q = this.value.trim();
+    // Toggle helper text: hide as soon as user types anything, show again when cleared
+    var helper = document.querySelector('.bw-mobile-helper');
+    if (helper) helper.classList.toggle('hid', q.length > 0);
     if (q.length < 2) { mdd.classList.remove('open'); mdd.innerHTML = ''; d.addr = ''; return; }
     mdd.innerHTML = '<div class="ekstra-liten-tekst" style="padding:16px;text-align:center;opacity:0.4;">Søker...</div>';
     mdd.classList.add('open');
@@ -598,6 +596,8 @@
     selDate = null;
     // Clear UI state
     ai.value = ''; if (mai) mai.value = '';
+    var helper = document.querySelector('.bw-mobile-helper');
+    if (helper) helper.classList.remove('hid');
     document.querySelectorAll('.bw-opt.sel').forEach(function(x) { x.classList.remove('sel'); });
     document.querySelectorAll('.bw-d.sel').forEach(function(x) { x.classList.remove('sel'); });
     ['bw-fornavn','bw-etternavn','bw-email','bw-phone','bw-msg'].forEach(function(id) { var e = g(id); if (e) e.value = ''; });
