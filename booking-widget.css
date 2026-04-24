@@ -89,10 +89,9 @@
 /* Close button — legacy element removed from DOM; rule kept in case any stray references remain */
 .bw-close { display: none !important; }
 
-/* ── Mobile top bar (back / logo / close) + progress bar ── */
+/* ── Mobile top bar (back / logo / close) ── */
 /* Hidden on desktop; revealed in the mobile media query below */
 .bw-top-bar { display: none; }
-.bw-steps-topbar { display: none; }
 
 /* ── Steps (base) ── */
 .bw-step { display: none; }
@@ -148,18 +147,14 @@
     max-width: 140px;
   }
 
-  /* Progress bar sits flush edge-to-edge directly below the top bar */
-  .bw-steps-topbar {
-    display: flex; gap: 4px;
+  /* Single progress bar — sits between top bar and body, flush edge-to-edge with side padding */
+  .bw-steps {
+    display: flex; gap: 6px;
     flex-shrink: 0;
-    padding: 0;
+    padding: 4px 24px 12px;
+    margin: 0;
   }
-  .bw-steps-topbar .bw-dot {
-    border-radius: 0; height: 3px; flex: 1;
-  }
-
-  /* Hide body progress on mobile (topbar handles it) */
-  .bw-panel-body > .bw-steps { display: none; }
+  .bw-steps .bw-dot { height: 4px; }
 
   /* Fixed footer bar — only Neste button on mobile */
   .bw-panel-footer {
@@ -255,9 +250,17 @@
   .bw-backdrop.open { display: block; }
 }
 
-/* ── Progress ── */
-.bw-steps { display: flex; gap: 4px; margin-bottom: 24px; }
-.bw-dot { height: 4px; flex: 1; border-radius: 0; background: #fce3e4; transition: background 0.3s ease, opacity 0.3s ease; }
+/* ── Progress bar (pill segments, single element for desktop + mobile) ── */
+.bw-steps {
+  display: flex; gap: 6px;
+  margin-bottom: 24px;
+}
+.bw-dot {
+  height: 4px; flex: 1;
+  border-radius: 100px;
+  background: #fce3e4;
+  transition: background 0.3s ease, opacity 0.3s ease;
+}
 .bw-dot.active { background: #e65154; }
 .bw-dot.done { background: #e65154; opacity: 0.45; }
 
@@ -276,15 +279,24 @@
   transition: border-color 0.2s ease, background 0.2s ease;
 }
 .bw-msearch-wrap:focus-within { border-color: #e65154; background: #fce3e4; }
-.bw-msearch-icon { position: absolute; left: 18px; color: #2e1618; opacity: 0.35; pointer-events: none; }
 .bw-mobile-addr {
-  width: 100%; padding: 18px 18px 18px 50px; border: none; border-radius: 16px;
+  width: 100%; padding: 18px 20px; border: none; border-radius: 16px;
   font-size: 16px; color: #2e1618; background: transparent; outline: none;
   font-family: inherit;
 }
-.bw-mobile-addr::placeholder { color: #2e1618; opacity: 0.35; }
+.bw-mobile-addr::placeholder { color: #2e1618; opacity: 0.45; }
+
+/* Helper text under the search field — hidden once user starts typing (handled in JS) */
+.bw-mobile-helper {
+  font-size: 13px; color: #2e1618; opacity: 0.5;
+  margin-top: 10px; padding: 0 4px;
+  line-height: 1.4;
+  transition: opacity 0.2s ease;
+}
+.bw-mobile-helper.hid { display: none; }
+
 .bw-mobile-dd {
-  display: none; margin-top: 12px;
+  display: none; margin-top: 16px;
   border-radius: 16px; overflow: hidden; overflow-y: auto; max-height: 45vh;
   background: #fdf3f3;
 }
