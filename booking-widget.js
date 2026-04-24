@@ -9,7 +9,7 @@
   var STEPS = [1,2,3,4,5];
 
   var s = 1, sliding = false;
-  var d = { addr:'', type:'', rooms:'', date:'', time:'', name:'', email:'', phone:'', msg:'' };
+  var d = { addr:'', type:'', rooms:'', date:'', time:'', fornavn:'', etternavn:'', email:'', phone:'', msg:'' };
   var booked = {};
 
   var g = function(id) { return document.getElementById(id); };
@@ -18,6 +18,7 @@
   var panel = g('bw-panel'), backdrop = g('bw-backdrop');
 
   var se = g('bw-steps'), nx = g('bw-nx'), bk = g('bw-bk'), pnav = g('bw-pnav'), okEl = g('bw-ok');
+  var bkTop = g('bw-top-bar-back'), closeTop = g('bw-top-bar-close');
   var footer = g('bw-panel-footer');
   var timeInline = g('bw-time-inline');
   var track = g('bw-cal-track');
@@ -27,8 +28,8 @@
   var td = new Date(); td.setHours(0,0,0,0);
   var selDate = null;
 
-  // Progress dots (5 steps) — create in both body and footer
-  var seFooter = g('bw-steps-footer');
+  // Progress dots (5 steps) — create in body (desktop) and topbar (mobile)
+  var seTopbar = g('bw-steps-topbar');
   for (var i = 0; i < STEPS.length; i++) {
     var dot = document.createElement('div');
     dot.className = 'bw-dot' + (i === 0 ? ' active' : '');
@@ -37,7 +38,7 @@
     var dot2 = document.createElement('div');
     dot2.className = 'bw-dot' + (i === 0 ? ' active' : '');
     dot2.dataset.idx = i;
-    seFooter.appendChild(dot2);
+    seTopbar.appendChild(dot2);
   }
 
   // ── Panel open/close ──
@@ -83,7 +84,11 @@
   }
 
   backdrop.addEventListener('click', closePanel);
-  g('bw-close').addEventListener('click', closePanel);
+  if (closeTop) closeTop.addEventListener('click', closePanel);
+  if (bkTop) bkTop.addEventListener('click', function() {
+    var idx = STEPS.indexOf(s);
+    if (idx > 0) goStep(STEPS[idx - 1]);
+  });
 
   // ── Step navigation ──
   function goStep(n) {
@@ -101,6 +106,7 @@
     // Back button: on mobile show from step 2, on desktop hide on step 2
     var hideBack = isMobile() ? (n <= 1) : (n <= 2);
     bk.classList.toggle('hid', hideBack);
+    if (bkTop) bkTop.classList.toggle('hid', hideBack);
     nx.textContent = n === 5 ? 'Book møte' : 'Neste';
     // Hide footer on step 1 (address step — selection auto-advances)
     footer.style.display = (n === 1) ? 'none' : '';
@@ -178,13 +184,14 @@
 
   async function saveBooking() {
     booked[d.date + '|' + d.time] = true;
+    var navn = (d.fornavn + ' ' + d.etternavn).replace(/\s+/g, ' ').trim();
     try {
       await fetch(API, {
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
           Dato: d.date, Tid: d.time, Adresse: d.addr, Type: d.type,
-          Soverom: d.rooms, Navn: d.name, Epost: d.email, Telefon: d.phone, Melding: d.msg
+          Soverom: d.rooms, Navn: navn, Epost: d.email, Telefon: d.phone, Melding: d.msg
         })
       });
     } catch (e) {}
@@ -204,19 +211,38 @@
       .then(function(res) {
         if (!res.adresser || !res.adresser.length) return null;
         return res.adresser.map(function(a) {
-          return { l1: [a.adressetekst, a.postnummer, a.poststed].filter(Boolean).join(', ') + ', Norge', l2: dedup([a.postnummer, a.poststed, a.kommunenavn].filter(Boolean)).join(', '), full: dedup([a.adressetekst, a.postnummer, a.poststed, a.kommunenavn].filter(Boolean)).join(', ') };
+          // l1: street + number only. l2: deduped postnummer/poststed/kommunenavn.
+          // full: saved to sheet — adressetekst + postnummer + poststed + kommunenavn.
+          // "Norge" is intentionally excluded: the API only returns Norwegian addresses,
+          // so including the country label is pure redundancy.
+          return {
+            l1: a.adressetekst || '',
+            l2: dedup([a.postnummer, a.poststed, a.kommunenavn].filter(Boolean)).join(', '),
+            full: dedup([a.adressetekst, a.postnummer, a.poststed, a.kommunenavn].filter(Boolean)).join(', ')
+          };
         });
       });
   }
 
+  // Pin-marker icon reused in both dropdowns
+  var PIN_SVG = '<svg class="bw-di-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/></svg>';
+
+  function escAttr(s) { return String(s || '').replace(/"/g,'&quot;'); }
+
   function renderAddr(results) {
     if (!results || !results.length) { dd.innerHTML = '<div class="ekstra-liten-tekst" style="padding:16px;text-align:center;opacity:0.4;">Ingen treff</div>'; return; }
     dd.innerHTML = results.map(function(r) {
-      return '<div class="bw-di" data-f="' + r.full.replace(/"/g,'&quot;') + '" data-l="' + r.l1.replace(/"/g,'&quot;') + '"><p class="ekstra-liten-tekst" style="font-weight:500;">' + r.l1 + '</p><p class="ekstra-liten-tekst" style="opacity:0.4;margin-top:1px;">' + r.l2 + '</p></div>';
+      return '<div class="bw-di" data-f="' + escAttr(r.full) + '">'
+        + PIN_SVG
+        + '<div class="bw-di-text">'
+        +   '<p class="ekstra-liten-tekst bw-di-l1">' + r.l1 + '</p>'
+        +   '<p class="ekstra-liten-tekst bw-di-l2">' + r.l2 + '</p>'
+        + '</div>'
+      + '</div>';
     }).join('');
     dd.querySelectorAll('.bw-di').forEach(function(item) {
       item.addEventListener('click', function() {
-        ai.value = this.dataset.l;
+        ai.value = this.dataset.f;
         d.addr = this.dataset.f;
         dd.classList.remove('open');
         openPanel();
@@ -274,12 +300,18 @@
   function renderMobileAddr(results) {
     if (!results || !results.length) { mdd.innerHTML = '<div class="ekstra-liten-tekst" style="padding:16px;text-align:center;opacity:0.4;">Ingen treff</div>'; return; }
     mdd.innerHTML = results.map(function(r) {
-      return '<div class="bw-di" data-f="' + r.full.replace(/"/g,'&quot;') + '" data-l="' + r.l1.replace(/"/g,'&quot;') + '"><p class="ekstra-liten-tekst" style="font-weight:500;">' + r.l1 + '</p><p class="ekstra-liten-tekst" style="opacity:0.4;margin-top:1px;">' + r.l2 + '</p></div>';
+      return '<div class="bw-di" data-f="' + escAttr(r.full) + '">'
+        + PIN_SVG
+        + '<div class="bw-di-text">'
+        +   '<p class="ekstra-liten-tekst bw-di-l1">' + r.l1 + '</p>'
+        +   '<p class="ekstra-liten-tekst bw-di-l2">' + r.l2 + '</p>'
+        + '</div>'
+      + '</div>';
     }).join('');
     mdd.querySelectorAll('.bw-di').forEach(function(item) {
       item.addEventListener('click', function() {
-        mai.value = this.dataset.l;
-        ai.value = this.dataset.l;
+        mai.value = this.dataset.f;
+        ai.value = this.dataset.f;
         d.addr = this.dataset.f;
         mdd.classList.remove('open');
         goStep(2);
@@ -445,7 +477,7 @@
     if (!stripEl) return;
     var sel = stripEl.querySelector('.bw-ds-item.sel');
     if (!sel) {
-      // No selection: auto-select first non-disabled item
+      // No selection: auto-select first non-disabled item and scroll to it
       var first = stripEl.querySelector('.bw-ds-item:not(.dis)');
       if (first) {
         stripEl.scrollLeft = Math.max(0, first.offsetLeft - 4);
@@ -454,7 +486,14 @@
       updateStripMonthLabel();
       return;
     }
-    stripEl.scrollLeft = Math.max(0, sel.offsetLeft - 4);
+    // Only scroll if the selected item is not fully inside the strip's visible viewport.
+    // Avoids the jarring jump when today (or the chosen date) is already in view.
+    var stripRect = stripEl.getBoundingClientRect();
+    var selRect = sel.getBoundingClientRect();
+    var fullyVisible = selRect.left >= stripRect.left - 1 && selRect.right <= stripRect.right + 1;
+    if (!fullyVisible) {
+      stripEl.scrollLeft = Math.max(0, sel.offsetLeft - 4);
+    }
     updateStripMonthLabel();
   }
 
@@ -535,9 +574,15 @@
   rc();
 
   // ── Contact ──
-  ['bw-name','bw-email','bw-phone','bw-msg'].forEach(function(id) {
+  ['bw-fornavn','bw-etternavn','bw-email','bw-phone','bw-msg'].forEach(function(id) {
     var e = g(id); if (!e) return;
-    e.addEventListener('input', function() { d.name = g('bw-name').value.trim(); d.email = g('bw-email').value.trim(); d.phone = g('bw-phone').value.trim(); d.msg = g('bw-msg').value.trim(); });
+    e.addEventListener('input', function() {
+      d.fornavn = (g('bw-fornavn') || {}).value ? g('bw-fornavn').value.trim() : '';
+      d.etternavn = (g('bw-etternavn') || {}).value ? g('bw-etternavn').value.trim() : '';
+      d.email = g('bw-email').value.trim();
+      d.phone = g('bw-phone').value.trim();
+      d.msg = g('bw-msg').value.trim();
+    });
   });
 
   // ── Submit ──
@@ -549,13 +594,13 @@
 
   function resetForm() {
     // Clear all data
-    d = { addr:'', type:'', rooms:'', date:'', time:'', name:'', email:'', phone:'', msg:'' };
+    d = { addr:'', type:'', rooms:'', date:'', time:'', fornavn:'', etternavn:'', email:'', phone:'', msg:'' };
     selDate = null;
     // Clear UI state
     ai.value = ''; if (mai) mai.value = '';
     document.querySelectorAll('.bw-opt.sel').forEach(function(x) { x.classList.remove('sel'); });
     document.querySelectorAll('.bw-d.sel').forEach(function(x) { x.classList.remove('sel'); });
-    ['bw-name','bw-email','bw-phone','bw-msg'].forEach(function(id) { var e = g(id); if (e) e.value = ''; });
+    ['bw-fornavn','bw-etternavn','bw-email','bw-phone','bw-msg'].forEach(function(id) { var e = g(id); if (e) e.value = ''; });
     // Reset view back to step 2 (default for desktop)
     okEl.classList.remove('active');
     footer.style.display = '';
@@ -574,26 +619,6 @@
     });
   }
 
-  function spawnSparkles() {
-    var el = g('bw-sparkles');
-    if (!el) return;
-    el.innerHTML = '';
-    var colors = ['#e65154','#ff696c','#fce3e4','#2e1618'];
-    var n = 18;
-    for (var i = 0; i < n; i++) {
-      var angle = (i / n) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
-      var dist = 110 + Math.random() * 80;
-      var sx = Math.cos(angle) * dist;
-      var sy = Math.sin(angle) * dist;
-      var sr = Math.random() * 180 - 90;
-      var sc = colors[i % colors.length];
-      var sd = Math.random() * 0.25;
-      var sp = document.createElement('span');
-      sp.style.cssText = '--sx:' + sx.toFixed(0) + 'px;--sy:' + sy.toFixed(0) + 'px;--sr:' + sr.toFixed(0) + 'deg;--sc:' + sc + ';--sd:' + sd.toFixed(2) + 's';
-      el.appendChild(sp);
-    }
-  }
-
   function done() {
     nx.classList.remove('bw-ld');
     document.querySelectorAll('.bw-step').forEach(function(e) { e.classList.remove('active'); });
@@ -606,12 +631,12 @@
       void stage.offsetWidth;
       stage.classList.add('animate');
     }
-    spawnSparkles();
+    var navn = (d.fornavn + ' ' + d.etternavn).replace(/\s+/g, ' ').trim();
     g('bw-sum').innerHTML =
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Adresse</span><span class="ekstra-liten-tekst bw-sr-val">' + d.addr + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Type</span><span class="ekstra-liten-tekst bw-sr-val">' + d.type + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Soverom</span><span class="ekstra-liten-tekst bw-sr-val">' + d.rooms + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Møte</span><span class="ekstra-liten-tekst bw-sr-val">' + d.date + ' kl. ' + d.time + '</span></div>' +
-      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Navn</span><span class="ekstra-liten-tekst bw-sr-val">' + d.name + '</span></div>';
+      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Navn</span><span class="ekstra-liten-tekst bw-sr-val">' + navn + '</span></div>';
   }
 })();
