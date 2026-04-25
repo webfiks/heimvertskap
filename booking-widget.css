@@ -197,12 +197,6 @@
     margin-bottom: 0;
     flex-shrink: 0;
   }
-  /* Step-header icon: 40px square on mobile (the SVG centers inside via .bw-icon-box) */
-  .bw-step-header .bw-step-icon {
-    width: 40px; height: 40px;
-    margin-bottom: 12px;
-    color: #e65154;
-  }
   .bw-step-title { font-size: 26px; font-weight: 700; line-height: 1.2; color: #2e1618; }
   .bw-step-sub { display: block; font-size: 14px; color: #2e1618; opacity: 0.4; margin-top: 6px; font-weight: 400; }
 
@@ -215,22 +209,6 @@
   .bw-step.active:not(:has(.bw-step-header)) {
     padding-top: 32px;
   }
-
-  /* Rooms: 2x2 large card grid on mobile */
-  .bw-opts.rooms {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px; flex: 1;
-    align-content: center;
-    margin-top: 24px;
-  }
-  .bw-opts.rooms .bw-opt {
-    padding: 28px 16px;
-    border-radius: 20px;
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: 4px;
-    min-height: 100px;
-  }
-  .bw-opts.rooms .bw-oi-num { font-size: 28px; }
 
   /* Type bolig: 2x2 large cards on mobile */
   .bw-opts {
@@ -321,8 +299,6 @@
 
 /* Option cards */
 .bw-opts { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-.bw-opts.rooms { grid-template-columns: repeat(4, 1fr); }
-@media (max-width: 420px) { .bw-opts.rooms { grid-template-columns: repeat(2, 1fr); } }
 
 .bw-opt {
   background: #fdf3f3; border: 1.5px solid transparent; border-radius: 32px;
@@ -360,17 +336,10 @@
 .bw-opt:hover .bw-oi,
 .bw-opt.sel .bw-oi { color: #e65154; }
 
-/* Step header — desktop: icon + title + subtitle, scaled down */
+/* Step header — desktop: title + subtitle */
 .bw-step-header { margin-bottom: 16px; }
-.bw-step-icon {
-  display: block;
-  margin-bottom: 6px;
-  width: 28px; height: 28px;
-  color: #e65154;
-}
 .bw-step-title { font-size: 19px; font-weight: 700; color: #2e1618; line-height: 1.2; }
 .bw-step-sub { display: block; font-size: 13px; color: #2e1618; opacity: 0.45; margin-top: 4px; font-weight: 400; }
-.bw-oi-num { font-size: 20px; font-weight: 700; display: block; color: #2e1618; }
 
 /* Calendar — carousel */
 .bw-cal-outer { display: flex; align-items: start; gap: 8px; }
