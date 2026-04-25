@@ -86,9 +86,6 @@
   pointer-events: auto;
 }
 
-/* Close button — legacy element removed from DOM; rule kept in case any stray references remain */
-.bw-close { display: none !important; }
-
 /* ── Mobile top bar (back / logo / close) ── */
 /* Hidden on desktop; revealed in the mobile media query below */
 .bw-top-bar { display: none; }
@@ -179,9 +176,19 @@
   /* ── Mobile step structure ── */
   .bw-panel-body {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
-    padding: 0 24px 24px;
+    padding: 0;
     display: flex; flex-direction: column;
   }
+  /* Default side padding for normal steps (2–5) and the success screen.
+     Step 1 (address search) is intentionally excluded → field runs edge-to-edge. */
+  .bw-panel-body > .bw-step:not(.bw-step-addr),
+  .bw-panel-body > .bw-ok {
+    padding: 0 24px 24px;
+  }
+  /* Step 1 still needs side padding for the dropdown items, just less than the others
+     and applied to the inner search container, not the outer step. */
+  .bw-step-addr.active { padding-bottom: 24px; }
+  .bw-step-addr .bw-mobile-search { padding: 0 24px; }
 
   /* Step header: padding reduced since top bar now occupies the header zone */
   .bw-step-header {
@@ -190,7 +197,12 @@
     margin-bottom: 0;
     flex-shrink: 0;
   }
-  .bw-step-icon { display: block; font-size: 32px; margin-bottom: 12px; }
+  /* Step-header icon: 40px square on mobile (the SVG centers inside via .bw-icon-box) */
+  .bw-step-header .bw-step-icon {
+    width: 40px; height: 40px;
+    margin-bottom: 12px;
+    color: #e65154;
+  }
   .bw-step-title { font-size: 26px; font-weight: 700; line-height: 1.2; color: #2e1618; }
   .bw-step-sub { display: block; font-size: 14px; color: #2e1618; opacity: 0.4; margin-top: 6px; font-weight: 400; }
 
@@ -233,7 +245,7 @@
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;
   }
-  .bw-opts .bw-oi { font-size: 32px; margin-bottom: 8px; }
+  .bw-opts .bw-oi { width: 48px; height: 48px; margin: 0 auto 8px; }
 
   /* Make inline address field a tap target on mobile (no keyboard) */
   .bw-inp { pointer-events: none; }
@@ -320,12 +332,42 @@
 .bw-opt:hover:not(.sel) { background: #fce3e4; border-color: rgba(230, 81, 84,0.15); }
 .bw-opt.sel { background: #fce3e4; border-color: #e65154; cursor: default; }
 
-.bw-oi { font-size: 24px; margin-bottom: 6px; display: block; }
+/* ── Icon box: fixed-size square that centers any SVG inside ──
+   Used for step-header icons (40×40 mobile / 28×28 desktop) and type-bolig card icons.
+   The container size is set per-context; the rule below just centers the SVG and
+   makes it inherit the parent's color (so .bw-opt.sel can paint the icon coral). */
+.bw-icon-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  color: inherit;
+}
+.bw-icon-box svg {
+  width: 100%; height: 100%;
+  max-width: 100%; max-height: 100%;
+  display: block;
+}
 
-/* Step header — desktop: simple inline */
+/* Type-bolig card icons. Default dark, turn coral on select via currentColor. */
+.bw-oi {
+  display: block;
+  margin: 0 auto 8px;
+  width: 36px; height: 36px;
+  color: #2e1618;
+  transition: color 0.2s ease;
+}
+.bw-opt:hover .bw-oi,
+.bw-opt.sel .bw-oi { color: #e65154; }
+
 /* Step header — desktop: icon + title + subtitle, scaled down */
 .bw-step-header { margin-bottom: 16px; }
-.bw-step-icon { display: block; font-size: 22px; margin-bottom: 6px; line-height: 1; }
+.bw-step-icon {
+  display: block;
+  margin-bottom: 6px;
+  width: 28px; height: 28px;
+  color: #e65154;
+}
 .bw-step-title { font-size: 19px; font-weight: 700; color: #2e1618; line-height: 1.2; }
 .bw-step-sub { display: block; font-size: 13px; color: #2e1618; opacity: 0.45; margin-top: 4px; font-weight: 400; }
 .bw-oi-num { font-size: 20px; font-weight: 700; display: block; color: #2e1618; }
@@ -581,7 +623,7 @@ textarea.bw-ci { height: 96px; padding: 14px 16px; resize: none; line-height: 1.
 }
 .bw-ok-close:hover { background: #4a3222; }
 
-/* Stage holds sparkles + circle, positioned relative so sparkles anchor to center */
+/* Success stage: holds the circle + tick, sized to fit the animation */
 .bw-ok-stage {
   position: relative;
   width: 120px; height: 120px;
@@ -618,7 +660,7 @@ textarea.bw-ci { height: 96px; padding: 14px 16px; resize: none; line-height: 1.
   animation: bwOkTickDraw 0.667s cubic-bezier(0, 0, 0.303, 1) 0.167s forwards;
 }
 
-/* Coral circle pop + tick draw animations (sparkles removed for Lottie-fidelity) */
+/* Success animations: circle pops, then tick scales and draws */
 @keyframes bwOkPop {
   to { transform: scale(1); opacity: 1; }
 }
