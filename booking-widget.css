@@ -198,7 +198,7 @@
     flex-shrink: 0;
   }
   .bw-step-title { font-size: 26px; font-weight: 700; line-height: 1.2; color: #2e1618; }
-  .bw-step-sub { display: block; font-size: 14px; color: #2e1618; opacity: 0.4; margin-top: 6px; font-weight: 400; }
+  .bw-step-sub { display: block; font-size: 15px; color: #2e1618; opacity: 0.65; margin-top: 6px; font-weight: 400; }
 
   /* Steps fill remaining space */
   .bw-step.active {
@@ -339,7 +339,7 @@
 /* Step header — desktop: title + subtitle */
 .bw-step-header { margin-bottom: 16px; }
 .bw-step-title { font-size: 19px; font-weight: 700; color: #2e1618; line-height: 1.2; }
-.bw-step-sub { display: block; font-size: 13px; color: #2e1618; opacity: 0.45; margin-top: 4px; font-weight: 400; }
+.bw-step-sub { display: block; font-size: 14px; color: #2e1618; opacity: 0.65; margin-top: 4px; font-weight: 400; }
 
 /* Calendar — carousel */
 .bw-cal-outer { display: flex; align-items: start; gap: 8px; }
