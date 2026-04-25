@@ -67,7 +67,8 @@
     ensureBookingsLoaded();
     s = 1;
     goStep(1);
-    setTimeout(function() { mai.focus(); }, 400);
+    // Focus synchronously within the user gesture so iOS opens the keyboard.
+    mai.focus({ preventScroll: true });
   }
 
   function closePanel() {
