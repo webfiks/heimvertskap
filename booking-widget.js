@@ -6,10 +6,10 @@
   var WD = ['Ma','Ti','On','To','Fr','Lø','Sø'];
   var DN = ['Søndag','Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag'];
   var SLOTS = ['12:00','14:00','16:00'];
-  var STEPS = [1,2,3,4,5];
+  var STEPS = [1,2,4,5];
 
   var s = 1, sliding = false;
-  var d = { addr:'', type:'', rooms:'', date:'', time:'', fornavn:'', etternavn:'', email:'', phone:'', msg:'' };
+  var d = { addr:'', type:'', date:'', time:'', fornavn:'', etternavn:'', email:'', phone:'', msg:'' };
   var booked = {};
 
   var g = function(id) { return document.getElementById(id); };
@@ -86,9 +86,44 @@
     if (idx > 0) goStep(STEPS[idx - 1]);
   });
 
+  // ── Dynamic subtitles ──
+  // Each step's subtitle mirrors what the user has already committed to.
+  // Building this commitment chain raises the psychological cost of abandoning.
+  var DEFAULT_SUBS = {
+    2: 'Hva slags bolig ønsker du å leie ut?',
+    4: 'Finn en dato og tid som passer deg.',
+    5: 'Så vi kan sende deg en bekreftelse.'
+  };
+  function shortAddr() {
+    // Just the street part (first comma-separated token) — full address is too long for a subtitle
+    return (d.addr || '').split(',')[0].trim();
+  }
+  // Norwegian grammar varies by gender — map each housing type to its proper
+  // definite form + possessive ("eneboligen din" vs "rekkehuset ditt").
+  var TYPE_DEFINITE = {
+    'Enebolig':  'eneboligen din',
+    'Rekkehus':  'rekkehuset ditt',
+    'Leilighet': 'leiligheten din',
+    'Hytte':     'hytta di'
+  };
+  function updateSubtitle(n) {
+    var subEl = document.querySelector('.bw-step[data-step="' + n + '"] .bw-step-sub');
+    if (!subEl) return;
+    var text = DEFAULT_SUBS[n] || '';
+    if (n === 2 && d.addr) {
+      text = 'Hva slags bolig vil du leie ut på ' + shortAddr() + '?';
+    } else if (n === 4 && d.type && TYPE_DEFINITE[d.type]) {
+      text = 'Når passer det å vise oss ' + TYPE_DEFINITE[d.type] + '?';
+    } else if (n === 5 && d.date && d.time) {
+      text = 'Vi sender bekreftelse for ' + d.date + ' kl. ' + d.time + '.';
+    }
+    subEl.textContent = text;
+  }
+
   // ── Step navigation ──
   function goStep(n) {
     s = n;
+    updateSubtitle(n);
     document.querySelectorAll('.bw-step').forEach(function(e) { e.classList.remove('active'); });
     var t = document.querySelector('.bw-step[data-step="' + n + '"]');
     if (t) t.classList.add('active');
@@ -130,7 +165,6 @@
     switch (s) {
       case 1: ok = d.addr !== ''; break;
       case 2: ok = d.type !== ''; break;
-      case 3: ok = d.rooms !== ''; break;
       case 4:
         // Both date and time required (both are visible simultaneously)
         ok = d.date !== '' && d.time !== '';
@@ -186,8 +220,10 @@
         method: 'POST', mode: 'no-cors',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify({
+          // Soverom kept as empty string to preserve the existing Google Sheet's column shape.
+          // The Soverom step was removed from the form; new rows will have a blank Soverom cell.
           Dato: d.date, Tid: d.time, Adresse: d.addr, Type: d.type,
-          Soverom: d.rooms, Navn: navn, Epost: d.email, Telefon: d.phone, Melding: d.msg
+          Soverom: '', Navn: navn, Epost: d.email, Telefon: d.phone, Melding: d.msg
         })
       });
     } catch (e) {}
@@ -269,7 +305,7 @@
       searchKartverket(q, ac.signal)
         .then(renderAddr)
         .catch(function(e) { if (e.name !== 'AbortError') renderAddr(null); });
-    }, 300);
+    }, 200);
   });
 
   ai.addEventListener('focus', function(e) {
@@ -326,7 +362,7 @@
       searchKartverket(q, mac.signal)
         .then(renderMobileAddr)
         .catch(function(e) { if (e.name !== 'AbortError') renderMobileAddr(null); });
-    }, 300);
+    }, 200);
   });
 
   document.addEventListener('click', function(e) { if (!e.target.closest('.bw-aw') && !e.target.closest('.bw-panel')) dd.classList.remove('open'); });
@@ -340,10 +376,13 @@
       c.classList.add('sel');
       d[key] = c.dataset.value;
       valStep();
+      // Auto-advance: tapping a card IS the commitment. Skip the redundant Neste tap.
+      // Tilbake remains available on the next step for quick correction if user misclicked.
+      var idx = STEPS.indexOf(s);
+      if (idx < STEPS.length - 1) goStep(STEPS[idx + 1]);
     });
   }
   opts('bw-type', 'type');
-  opts('bw-rooms', 'rooms');
 
   // ── Calendar ──
   function buildMonth(year, month) {
@@ -562,6 +601,9 @@
         if (this.classList.contains('sel')) return;
         tsEl.querySelectorAll('.bw-tl-item').forEach(function(x) { x.classList.remove('sel'); });
         this.classList.add('sel'); d.time = this.dataset.t; valStep();
+        // Auto-advance: picking a time = picking the meeting. Skip Neste tap.
+        var idx = STEPS.indexOf(s);
+        if (idx < STEPS.length - 1) goStep(STEPS[idx + 1]);
       });
     });
   }
@@ -590,7 +632,7 @@
 
   function resetForm() {
     // Clear all data
-    d = { addr:'', type:'', rooms:'', date:'', time:'', fornavn:'', etternavn:'', email:'', phone:'', msg:'' };
+    d = { addr:'', type:'', date:'', time:'', fornavn:'', etternavn:'', email:'', phone:'', msg:'' };
     selDate = null;
     // Clear UI state
     ai.value = ''; if (mai) mai.value = '';
@@ -631,7 +673,6 @@
     g('bw-sum').innerHTML =
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Adresse</span><span class="ekstra-liten-tekst bw-sr-val">' + d.addr + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Type</span><span class="ekstra-liten-tekst bw-sr-val">' + d.type + '</span></div>' +
-      '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Soverom</span><span class="ekstra-liten-tekst bw-sr-val">' + d.rooms + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Møte</span><span class="ekstra-liten-tekst bw-sr-val">' + d.date + ' kl. ' + d.time + '</span></div>' +
       '<div class="bw-sr"><span class="ekstra-liten-tekst bw-sr-lbl">Navn</span><span class="ekstra-liten-tekst bw-sr-val">' + navn + '</span></div>';
   }
